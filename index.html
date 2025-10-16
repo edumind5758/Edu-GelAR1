@@ -672,7 +672,7 @@
         let isOnline = navigator.onLine;
         
         // Google Apps Script URL - Ganti dengan URL deployment kamu
-        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwX8bX7z6bY7Z6vX7z6bY7Z6vX7z6bY7Z6vX7z6bY7Z6vX/exec';
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwm7fIT9VLNjDk7OsqRdv_pr9czkvLJrv_yWfwFP2Bxh8tYDVz4-2NMwCuyT_IXh2qhXw/exec';
         
         // Check online status
         window.addEventListener('online', () => {
@@ -819,22 +819,23 @@
             localStorage.setItem('quizResults', JSON.stringify(quizResults));
         }
 
-        // Function to send data to Google Sheets
+        // Function to send data to Google Sheets using GET method
         async function sendToGoogleSheets(name, kelas, nilai) {
             try {
                 if (!isOnline) {
                     throw new Error('Tidak ada koneksi internet');
                 }
                 
-                // Create form data
-                const formData = new FormData();
-                formData.append('nama', name);
-                formData.append('kelas', kelas);
-                formData.append('nilai', nilai);
+                // Create URL with parameters
+                const url = new URL(SCRIPT_URL);
+                url.searchParams.append('nama', name);
+                url.searchParams.append('kelas', kelas);
+                url.searchParams.append('nilai', nilai);
                 
-                const response = await fetch(SCRIPT_URL, {
-                    method: 'POST',
-                    body: formData,
+                console.log('Sending data to:', url.toString());
+                
+                const response = await fetch(url.toString(), {
+                    method: 'GET',
                     mode: 'no-cors'
                 });
                 
