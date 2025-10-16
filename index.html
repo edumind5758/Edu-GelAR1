@@ -1,579 +1,1029 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8" />
-  <title>Kuis Geleng Kepala - Peredaran Darah</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    body { 
-      margin: 0; 
-      font-family: 'Comic Sans MS', 'Arial', sans-serif; 
-      background:#111; 
-      color:#fff; 
-      text-align:center;
-      overflow: hidden;
-      position: relative;
-      height: 100vh;
-    }
-    
-    /* Video disembunyikan sepenuhnya */
-    video { 
-      position: fixed; 
-      top: 0; 
-      left: 0; 
-      width: 100vw; 
-      height: 100vh; 
-      object-fit: cover; 
-      opacity: 0; /* Disembunyikan sepenuhnya */
-      z-index: 1;
-      pointer-events: none; /* Mencegah interaksi */
-    }
-    
-    /* Canvas ditampilkan dengan efek mirror */
-    canvas { 
-      position: fixed; 
-      top: 0; 
-      left: 0; 
-      width: 100vw; 
-      height: 100vh; 
-      object-fit: cover; 
-      opacity: 0.7; /* Hanya canvas yang ditampilkan */
-      z-index: 1;
-    }
-    
-    /* Konten overlay */
-    .konten {
-      position: relative;
-      z-index: 10;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      height: 100vh;
-      padding: 40px 20px;
-      box-sizing: border-box;
-    }
-    
-    /* Area poin di atas */
-    .score-container {
-      position: absolute;
-      top: 20px;
-      left: 0;
-      right: 0;
-      z-index: 15;
-    }
-    
-    #score {
-      font-size: 1.5em;
-      font-weight: bold;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 10px 20px;
-      border-radius: 10px;
-      border: 2px solid #e74c3c;
-      display: inline-block;
-    }
-    
-    /* Area soal */
-    #soal { 
-      font-size: 1.4em; 
-      margin: 20px auto;
-      background: rgba(0, 0, 0, 0.7);
-      padding: 20px 40px;
-      border-radius: 15px;
-      border: 3px solid #e74c3c;
-      max-width: 70%;
-      box-shadow: 0 0 20px rgba(231, 76, 60, 0.5);
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      line-height: 1.4;
-    }
-    
-    /* Area jawaban */
-    #jawaban { 
-      display: flex; 
-      justify-content: space-between; 
-      margin-top: 30px;
-      width: 100%;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    
-    /* Kotak jawaban */
-    .kotak { 
-      width: 200px; 
-      height: 200px; 
-      font-size: 1.2em; 
-      border: 5px solid #3498db; 
-      border-radius: 15px;
-      transition: all 0.3s ease;
-      background: rgba(0, 0, 0, 0.7);
-      cursor: pointer;
-      box-shadow: 0 0 15px rgba(52, 152, 219, 0.3);
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-      padding: 15px;
-      box-sizing: border-box;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      line-height: 1.3;
-    }
-    
-    .kotak:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 25px rgba(52, 152, 219, 0.7);
-    }
-    
-    .kotak.terpilih { 
-      border-color: #2ecc71; 
-      transform: scale(1.15);
-      box-shadow: 0 0 30px rgba(46, 204, 113, 0.8);
-      background: rgba(0, 0, 0, 0.8);
-    }
-    
-    /* Area pesan */
-    .pesan-container {
-      background: rgba(0, 0, 0, 0.7);
-      padding: 15px 30px;
-      border-radius: 10px;
-      border: 2px solid #e74c3c;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      max-width: 800px;
-      margin: 0 auto;
-    }
-    
-    #pesan {
-      font-size: 1.2em;
-      color: #2ecc71;
-      min-height: 40px;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
-    }
-    
-    /* Progress bar */
-    .progress-container {
-      width: 80%;
-      max-width: 800px;
-      height: 20px;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 10px;
-      margin: 10px auto;
-      overflow: hidden;
-    }
-    
-    .progress-bar {
-      height: 100%;
-      background: #2ecc71;
-      width: 0%;
-      transition: width 0.3s ease;
-    }
-    
-    /* Gambar jantung */
-    .jantung-icon {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      font-size: 3em;
-      color: #e74c3c;
-      animation: heartbeat 1.5s infinite;
-    }
-    
-    @keyframes heartbeat {
-      0% { transform: scale(1); }
-      25% { transform: scale(1.1); }
-      50% { transform: scale(1); }
-      75% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-    
-    /* Tombol */
-    .tombol-container {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      margin: 20px 0;
-    }
-    
-    .tombol {
-      background: #3498db;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 15px 30px;
-      font-size: 1.2em;
-      font-family: 'Comic Sans MS', 'Arial', sans-serif;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-    }
-    
-    .tombol:hover {
-      background: #2980b9;
-      transform: translateY(-2px);
-      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
-    }
-    
-    .tombol:active {
-      transform: translateY(0);
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-    }
-    
-    .tombol.refresh {
-      background: #e74c3c;
-    }
-    
-    .tombol.refresh:hover {
-      background: #c0392b;
-    }
-    
-    /* Layar awal */
-    .layar-awal {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.8);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 20;
-    }
-    
-    .layar-awal h1 {
-      font-size: 2.5em;
-      margin-bottom: 30px;
-      color: #e74c3c;
-    }
-    
-    .layar-awal p {
-      font-size: 1.3em;
-      max-width: 600px;
-      margin-bottom: 40px;
-      line-height: 1.5;
-    }
-    
-    .hidden {
-      display: none !important;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Peredaran Darah - SD Kelas 6</title>
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100%;
+        }
+        
+        html {
+            height: 100%;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            margin: 10px 0 0 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .quiz-container {
+            padding: 30px;
+        }
+        
+        .question-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #e74c3c;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .question-card.active {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .question-number {
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .question-text {
+            font-size: 1.3em;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .options {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .option {
+            background: white;
+            border: 2px solid #ecf0f1;
+            border-radius: 10px;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1.1em;
+        }
+        
+        .option:hover {
+            border-color: #e74c3c;
+            background: #fdf2f2;
+            transform: translateY(-2px);
+        }
+        
+        .option.selected {
+            background: #e74c3c;
+            color: white;
+            border-color: #c0392b;
+        }
+        
+        .option.correct {
+            background: #27ae60;
+            color: white;
+            border-color: #229954;
+        }
+        
+        .option.wrong {
+            background: #e74c3c;
+            color: white;
+            border-color: #c0392b;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #ecf0f1;
+        }
+        
+        .btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        
+        .btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+        
+        .btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .progress {
+            flex-grow: 1;
+            margin: 0 20px;
+            text-align: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .progress-bar {
+            background: #ecf0f1;
+            height: 8px;
+            border-radius: 4px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            height: 100%;
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+        
+        .result-card {
+            background: linear-gradient(135deg, #27ae60, #229954);
+            color: white;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            display: none;
+        }
+        
+        .result-card.show {
+            display: block;
+            animation: bounceIn 0.8s ease-out;
+        }
+        
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        .score {
+            font-size: 3em;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        
+        .heart {
+            font-size: 2em;
+            animation: heartbeat 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes heartbeat {
+            0% {
+                transform: scale(1);
+            }
+            14% {
+                transform: scale(1.3);
+            }
+            28% {
+                transform: scale(1);
+            }
+            42% {
+                transform: scale(1.3);
+            }
+            70% {
+                transform: scale(1);
+            }
+        }
+        
+        .student-form {
+            display: block;
+        }
+        
+        .student-form.hidden {
+            display: none;
+        }
+        
+        .form-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .form-card h2 {
+            margin: 0 0 30px 0;
+            font-size: 1.8em;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+            text-align: left;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            box-sizing: border-box;
+            background: rgba(255,255,255,0.9);
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        
+        .btn-start {
+            background: #27ae60;
+            font-size: 1.2em;
+            padding: 15px 30px;
+            margin-top: 20px;
+        }
+        
+        .btn-start:hover {
+            background: #229954;
+        }
+        
+        .quiz-questions {
+            display: none;
+        }
+        
+        .quiz-questions.active {
+            display: block;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 5px;
+            color: white;
+            font-weight: bold;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .notification.show {
+            opacity: 1;
+        }
+        
+        .notification.success {
+            background: #27ae60;
+        }
+        
+        .notification.error {
+            background: #e74c3c;
+        }
+        
+        .sync-button {
+            background: #3498db;
+            margin-top: 15px;
+        }
+        
+        .sync-button:hover {
+            background: #2980b9;
+        }
+    </style>
 </head>
 <body>
-  <!-- Video disembunyikan -->
-  <video id="video" autoplay muted playsinline></video>
-  
-  <!-- Canvas ditampilkan -->
-  <canvas id="canvas"></canvas>
-  
-  <!-- Konten overlay -->
-  <div class="konten">
-    <!-- Ikon jantung -->
-    <div class="jantung-icon">❤️</div>
-    
-    <!-- Area poin di atas -->
-    <div class="score-container">
-      <div id="score">Poin: 0</div>
-    </div>
-    
-    <!-- Tombol refresh -->
-    <div class="tombol-container">
-      <button class="tombol refresh" id="refresh-btn">🔄 Refresh</button>
-    </div>
-    
-    <!-- Area soal -->
-    <div id="soal">Darah yang kaya oksigen dipompa oleh jantung ke seluruh tubuh melalui...?</div>
-    
-    <!-- Progress bar -->
-    <div class="progress-container">
-      <div class="progress-bar" id="progress-bar"></div>
-    </div>
-    
-    <!-- Area jawaban -->
-    <div id="jawaban">
-      <div class="kotak" data-pilihan="kiri">Peredaran darah besar</div>
-      <div class="kotak" data-pilihan="kanan">Peredaran darah kecil</div>
-    </div>
-    
-    <!-- Panel pesan -->
-    <div class="pesan-container">
-      <div id="pesan"></div>
-    </div>
-  </div>
-  
-  <!-- Layar awal -->
-  <div class="layar-awal" id="layar-awal">
-    <h1>Kuis Geleng Kepala</h1>
-    <p>Jawablah 10 soal tentang peredaran darah dengan cara menggelengkan kepala ke kiri atau kanan. Siap untuk memulai?</p>
-    <button class="tombol" id="mulai-btn">Mulai Kuis</button>
-  </div>
-
-  <!-- MediaPipe -->
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/face_mesh.js"></script>
-
-  <script>
-    const video   = document.getElementById('video');
-    const canvas  = document.getElementById('canvas');
-    const ctx     = canvas.getContext('2d');
-    const kotak   = Array.from(document.querySelectorAll('.kotak'));
-    const scoreEl = document.getElementById('score');
-    const pesanEl = document.getElementById('pesan');
-    const progressBar = document.getElementById('progress-bar');
-    const mulaiBtn = document.getElementById('mulai-btn');
-    const refreshBtn = document.getElementById('refresh-btn');
-    const layarAwal = document.getElementById('layar-awal');
-    
-    // Set ukuran canvas sama dengan viewport
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-
-    let lastK = 0;           // untuk debounce
-    let noseHistory = [];    // buffer posisi hidung
-    const BUF = 5;           // jumlah frame rata-rata
-    let score = 0;           // skor awal
-    let sudahJawab = false;  // mencegah jawaban ganda
-    let currentQuestionIndex = 0; // indeks soal saat ini
-    let kuisDimulai = false; // status kuis
-
-    // Data soal tentang peredaran darah
-    const soalData = [
-      {
-        soal: "Darah yang kaya oksigen dipompa oleh jantung ke seluruh tubuh melalui...?",
-        jawabanBenar: "Peredaran darah besar",
-        pilihan: ["Peredaran darah besar", "Peredaran darah kecil"]
-      },
-      {
-        soal: "Bagian jantung yang menerima darah dari paru-paru adalah...?",
-        jawabanBenar: "Serambi kiri",
-        pilihan: ["Serambi kiri", "Serambi kanan"]
-      },
-      {
-        soal: "Bagian jantung yang memompa darah ke paru-paru adalah...?",
-        jawabanBenar: "Bilik kanan",
-        pilihan: ["Bilik kanan", "Bilik kiri"]
-      },
-      {
-        soal: "Fungsi paru-paru dalam peredaran darah adalah...?",
-        jawabanBenar: "Pertukaran oksigen dan karbon dioksida",
-        pilihan: ["Pertukaran oksigen dan karbon dioksida", "Memompa darah ke seluruh tubuh"]
-      },
-      {
-        soal: "Tempat terjadinya pertukaran gas di paru-paru adalah...?",
-        jawabanBenar: "Alveolus",
-        pilihan: ["Alveolus", "Bronkus"]
-      },
-      {
-        soal: "Darah yang kaya karbon dioksida dari tubuh kembali ke jantung bagian...?",
-        jawabanBenar: "Serambi kanan",
-        pilihan: ["Serambi kanan", "Serambi kiri"]
-      },
-      {
-        soal: "Peredaran darah kecil mengalirkan darah antara...?",
-        jawabanBenar: "Jantung dan paru-paru",
-        pilihan: ["Jantung dan paru-paru", "Jantung dan seluruh tubuh"]
-      },
-      {
-        soal: "Bagian jantung yang paling kuat memompa darah adalah...?",
-        jawabanBenar: "Bilik kiri",
-        pilihan: ["Bilik kiri", "Bilik kanan"]
-      },
-      {
-        soal: "Katup jantung berfungsi untuk...?",
-        jawabanBenar: "Mencegah darah mengalir mundur",
-        pilihan: ["Mencegah darah mengalir mundur", "Meningkatkan tekanan darah"]
-      },
-      {
-        soal: "Darah yang sudah kaya oksigen dari paru-paru masuk ke jantung bagian...?",
-        jawabanBenar: "Serambi kiri",
-        pilihan: ["Serambi kiri", "Bilik kiri"]
-      }
-    ];
-
-    // (1) Akses kamera
-    navigator.mediaDevices.getUserMedia({video:{facingMode:'user'},audio:false})
-      .then(strm=>{ video.srcObject=strm; })
-      .catch(err=>{ alert('Kamera diblokir atau tidak tersedia'); console.error(err)});
-
-    // (2) Siapkan FaceMesh
-    const faceMesh = new FaceMesh({
-      locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh@0.4/${file}`
-    });
-    faceMesh.setOptions({
-      maxNumFaces: 1,
-      refineLandmarks: false,
-      minDetectionConfidence: 0.7,
-      minTrackingConfidence: 0.7
-    });
-    faceMesh.onResults(onResults);
-
-    // (3) Mulai pipeline
-    const camera = new Camera(video, {
-      onFrame: async () => {
-        // Gambar video ke canvas dengan efek mirror
-        ctx.save();
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        ctx.restore();
+    <div class="container">
+        <div class="header">
+            <h1>🫀 Kuis Peredaran Darah</h1>
+            <p>Untuk Siswa SD Kelas 6</p>
+        </div>
         
-        await faceMesh.send({image: video});
-      },
-      width: 1280,
-      height: 720
-    });
-    camera.start();
+        <div class="quiz-container">
+            <!-- Student Info Form -->
+            <div class="student-form" id="studentForm">
+                <div class="form-card">
+                    <h2>📝 Isi Data Diri Dulu Ya!</h2>
+                    <form id="studentInfoForm">
+                        <div class="form-group">
+                            <label for="studentName">Nama Lengkap:</label>
+                            <input type="text" id="studentName" name="studentName" required placeholder="Tulis nama lengkap kamu...">
+                        </div>
+                        <div class="form-group">
+                            <label for="studentClass">Kelas:</label>
+                            <select id="studentClass" name="studentClass" required>
+                                <option value="">Pilih kelas...</option>
+                                <option value="6A">6A</option>
+                                <option value="6B">6B</option>
+                                <option value="6C">6C</option>
+                                <option value="6D">6D</option>
+                                <option value="6E">6E</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-start">🚀 Mulai Kuis!</button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Quiz Questions Container -->
+            <div class="quiz-questions" id="quizQuestions">
+            <!-- Question 1 -->
+            <div class="question-card active">
+                <div class="question-number">1</div>
+                <div class="question-text">Organ yang memompa darah ke seluruh tubuh adalah...</div>
+                <div class="options">
+                    <div class="option" data-answer="correct">Jantung</div>
+                    <div class="option" data-answer="wrong">Paru-paru</div>
+                    <div class="option" data-answer="wrong">Hati</div>
+                    <div class="option" data-answer="wrong">Ginjal</div>
+                </div>
+            </div>
+            
+            <!-- Question 2 -->
+            <div class="question-card">
+                <div class="question-number">2</div>
+                <div class="question-text">Pembuluh darah yang membawa darah dari jantung ke seluruh tubuh disebut...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">Pembuluh balik</div>
+                    <div class="option" data-answer="correct">Pembuluh nadi</div>
+                    <div class="option" data-answer="wrong">Pembuluh rambut</div>
+                    <div class="option" data-answer="wrong">Pembuluh limfa</div>
+                </div>
+            </div>
+            
+            <!-- Question 3 -->
+            <div class="question-card">
+                <div class="question-number">3</div>
+                <div class="question-text">Warna darah yang kaya oksigen adalah...</div>
+                <div class="options">
+                    <div class="option" data-answer="correct">Merah terang</div>
+                    <div class="option" data-answer="wrong">Merah gelap</div>
+                    <div class="option" data-answer="wrong">Biru</div>
+                    <div class="option" data-answer="wrong">Ungu</div>
+                </div>
+            </div>
+            
+            <!-- Question 4 -->
+            <div class="question-card">
+                <div class="question-number">4</div>
+                <div class="question-text">Berapa ruang yang ada di dalam jantung manusia?</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">2 ruang</div>
+                    <div class="option" data-answer="wrong">3 ruang</div>
+                    <div class="option" data-answer="correct">4 ruang</div>
+                    <div class="option" data-answer="wrong">5 ruang</div>
+                </div>
+            </div>
+            
+            <!-- Question 5 -->
+            <div class="question-card">
+                <div class="question-number">5</div>
+                <div class="question-text">Organ yang berfungsi membersihkan darah dari racun adalah...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">Jantung</div>
+                    <div class="option" data-answer="wrong">Paru-paru</div>
+                    <div class="option" data-answer="correct">Ginjal</div>
+                    <div class="option" data-answer="wrong">Lambung</div>
+                </div>
+            </div>
+            
+            <!-- Question 6 -->
+            <div class="question-card">
+                <div class="question-number">6</div>
+                <div class="question-text">Pembuluh darah terkecil yang menghubungkan pembuluh nadi dan pembuluh balik disebut...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">Aorta</div>
+                    <div class="option" data-answer="correct">Pembuluh rambut</div>
+                    <div class="option" data-answer="wrong">Vena</div>
+                    <div class="option" data-answer="wrong">Arteri</div>
+                </div>
+            </div>
+            
+            <!-- Question 7 -->
+            <div class="question-card">
+                <div class="question-number">7</div>
+                <div class="question-text">Bagian darah yang berfungsi melawan kuman penyakit adalah...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">Sel darah merah</div>
+                    <div class="option" data-answer="correct">Sel darah putih</div>
+                    <div class="option" data-answer="wrong">Keping darah</div>
+                    <div class="option" data-answer="wrong">Plasma darah</div>
+                </div>
+            </div>
+            
+            <!-- Question 8 -->
+            <div class="question-card">
+                <div class="question-number">8</div>
+                <div class="question-text">Peredaran darah dari jantung ke paru-paru dan kembali ke jantung disebut peredaran darah...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">Besar</div>
+                    <div class="option" data-answer="correct">Kecil</div>
+                    <div class="option" data-answer="wrong">Tertutup</div>
+                    <div class="option" data-answer="wrong">Terbuka</div>
+                </div>
+            </div>
+            
+            <!-- Question 9 -->
+            <div class="question-card">
+                <div class="question-number">9</div>
+                <div class="question-text">Bagian darah yang membantu pembekuan darah saat terluka adalah...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">Sel darah merah</div>
+                    <div class="option" data-answer="wrong">Sel darah putih</div>
+                    <div class="option" data-answer="correct">Keping darah</div>
+                    <div class="option" data-answer="wrong">Plasma darah</div>
+                </div>
+            </div>
+            
+            <!-- Question 10 -->
+            <div class="question-card">
+                <div class="question-number">10</div>
+                <div class="question-text">Denyut jantung orang dewasa normal dalam satu menit sekitar...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">40-50 kali</div>
+                    <div class="option" data-answer="wrong">60-70 kali</div>
+                    <div class="option" data-answer="correct">70-80 kali</div>
+                    <div class="option" data-answer="wrong">90-100 kali</div>
+                </div>
+            </div>
+            
+            <!-- Question 11 -->
+            <div class="question-card">
+                <div class="question-number">11</div>
+                <div class="question-text">Tempat pertukaran oksigen dan karbon dioksida dalam darah terjadi di...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">Jantung</div>
+                    <div class="option" data-answer="correct">Paru-paru</div>
+                    <div class="option" data-answer="wrong">Hati</div>
+                    <div class="option" data-answer="wrong">Ginjal</div>
+                </div>
+            </div>
+            
+            <!-- Question 12 -->
+            <div class="question-card">
+                <div class="question-number">12</div>
+                <div class="question-text">Pembuluh darah yang membawa darah kembali ke jantung disebut...</div>
+                <div class="options">
+                    <div class="option" data-answer="correct">Pembuluh balik</div>
+                    <div class="option" data-answer="wrong">Pembuluh nadi</div>
+                    <div class="option" data-answer="wrong">Pembuluh rambut</div>
+                    <div class="option" data-answer="wrong">Pembuluh getah bening</div>
+                </div>
+            </div>
+            
+            <!-- Question 13 -->
+            <div class="question-card">
+                <div class="question-number">13</div>
+                <div class="question-text">Bagian cair dari darah yang berwarna kuning disebut...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">Serum</div>
+                    <div class="option" data-answer="correct">Plasma darah</div>
+                    <div class="option" data-answer="wrong">Hemoglobin</div>
+                    <div class="option" data-answer="wrong">Antibodi</div>
+                </div>
+            </div>
+            
+            <!-- Question 14 -->
+            <div class="question-card">
+                <div class="question-number">14</div>
+                <div class="question-text">Olahraga yang baik untuk kesehatan jantung adalah...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">Angkat beban berat</div>
+                    <div class="option" data-answer="correct">Lari pagi</div>
+                    <div class="option" data-answer="wrong">Main game</div>
+                    <div class="option" data-answer="wrong">Tidur siang</div>
+                </div>
+            </div>
+            
+            <!-- Question 15 -->
+            <div class="question-card">
+                <div class="question-number">15</div>
+                <div class="question-text">Makanan yang baik untuk kesehatan darah adalah...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">Gorengan</div>
+                    <div class="option" data-answer="wrong">Permen</div>
+                    <div class="option" data-answer="correct">Sayuran hijau</div>
+                    <div class="option" data-answer="wrong">Minuman bersoda</div>
+                </div>
+            </div>
+            
+            <!-- Question 16 -->
+            <div class="question-card">
+                <div class="question-number">16</div>
+                <div class="question-text">Peredaran darah dari jantung ke seluruh tubuh dan kembali ke jantung disebut peredaran darah...</div>
+                <div class="options">
+                    <div class="option" data-answer="correct">Besar</div>
+                    <div class="option" data-answer="wrong">Kecil</div>
+                    <div class="option" data-answer="wrong">Sedang</div>
+                    <div class="option" data-answer="wrong">Pendek</div>
+                </div>
+            </div>
+            
+            <!-- Question 17 -->
+            <div class="question-card">
+                <div class="question-number">17</div>
+                <div class="question-text">Sel darah merah berfungsi untuk...</div>
+                <div class="options">
+                    <div class="option" data-answer="correct">Mengangkut oksigen</div>
+                    <div class="option" data-answer="wrong">Melawan kuman</div>
+                    <div class="option" data-answer="wrong">Membekukan darah</div>
+                    <div class="option" data-answer="wrong">Mencerna makanan</div>
+                </div>
+            </div>
+            
+            <!-- Question 18 -->
+            <div class="question-card">
+                <div class="question-number">18</div>
+                <div class="question-text">Kebiasaan yang dapat merusak kesehatan jantung adalah...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">Minum air putih</div>
+                    <div class="option" data-answer="wrong">Olahraga teratur</div>
+                    <div class="option" data-answer="correct">Merokok</div>
+                    <div class="option" data-answer="wrong">Makan buah</div>
+                </div>
+            </div>
+            
+            <!-- Question 19 -->
+            <div class="question-card">
+                <div class="question-number">19</div>
+                <div class="question-text">Denyut nadi dapat dirasakan di...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">Punggung</div>
+                    <div class="option" data-answer="correct">Pergelangan tangan</div>
+                    <div class="option" data-answer="wrong">Lutut</div>
+                    <div class="option" data-answer="wrong">Perut</div>
+                </div>
+            </div>
+            
+            <!-- Question 20 -->
+            <div class="question-card">
+                <div class="question-number">20</div>
+                <div class="question-text">Jantung terletak di dalam...</div>
+                <div class="options">
+                    <div class="option" data-answer="wrong">Perut</div>
+                    <div class="option" data-answer="correct">Dada</div>
+                    <div class="option" data-answer="wrong">Kepala</div>
+                    <div class="option" data-answer="wrong">Punggung</div>
+                </div>
+            </div>
+            
+            <!-- Result Card -->
+            <div class="result-card">
+                <div class="heart">❤️</div>
+                <h2>Selamat! Kuis Selesai!</h2>
+                <div class="score" id="finalScore">0/20</div>
+                <p id="resultMessage">Bagus sekali!</p>
+                <div id="studentInfo" style="margin: 20px 0; font-size: 1.1em;"></div>
+                <div id="syncStatus" style="margin: 10px 0; font-size: 0.9em;"></div>
+                <button class="btn sync-button" id="syncButton" onclick="syncData()" style="display:none;">🔄 Sinkronkan Data</button>
+                <button class="btn" onclick="restartQuiz()">Ulangi Kuis</button>
+            </div>
+            
+            <div class="controls">
+                <button class="btn" id="prevBtn" onclick="previousQuestion()" disabled>⬅️ Sebelumnya</button>
+                <div class="progress">
+                    <div>Soal <span id="currentQ">1</span> dari 20</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                </div>
+                <button class="btn" id="nextBtn" onclick="nextQuestion()" disabled>Selanjutnya ➡️</button>
+            </div>
+            </div> <!-- End quiz-questions -->
+        </div>
+    </div>
 
-    // Event listener untuk tombol
-    mulaiBtn.addEventListener('click', mulaiKuis);
-    refreshBtn.addEventListener('click', refreshKuis);
+    <!-- Notification container -->
+    <div id="notification" class="notification"></div>
 
-    // Fungsi untuk memulai kuis
-    function mulaiKuis() {
-      kuisDimulai = true;
-      layarAwal.classList.add('hidden');
-      resetKuis();
-    }
-
-    // Fungsi untuk refresh kuis
-    function refreshKuis() {
-      resetKuis();
-    }
-
-    // Fungsi untuk reset kuis
-    function resetKuis() {
-      score = 0;
-      currentQuestionIndex = 0;
-      sudahJawab = false;
-      scoreEl.textContent = `Poin: ${score}`;
-      pesanEl.textContent = "";
-      progressBar.style.width = "0%";
-      
-      // Reset tampilan
-      kotak.forEach(k => k.classList.remove('terpilih'));
-      document.getElementById('jawaban').style.display = "flex";
-      document.querySelector('.progress-container').style.display = "block";
-      
-      // Tampilkan soal pertama
-      const firstSoal = soalData[0];
-      document.getElementById('soal').textContent = firstSoal.soal;
-      kotak[0].textContent = firstSoal.pilihan[0];
-      kotak[1].textContent = firstSoal.pilihan[1];
-    }
-
-    // (4) Callback setiap frame
-    function onResults(results) {
-      if (!kuisDimulai) return; // Jangan proses jika kuis belum dimulai
-      
-      if (!results.multiFaceLandmarks.length) return;
-
-      const key = results.multiFaceLandmarks[0];
-      const hidung = key[1];               // landmark nomor 1 = ujung hidung
-      
-      // Perbaiki: Balik koordinat x untuk mencerminkan gerakan yang benar
-      const x = canvas.width - (hidung.x * canvas.width);
-
-      noseHistory.push(x);
-      if (noseHistory.length > BUF) noseHistory.shift();
-
-      if (noseHistory.length < BUF) return;
-
-      // rata-rata 5 frame
-      const avg = arr => arr.reduce((a,b)=>a+b,0)/arr.length;
-      const mid = avg(noseHistory);
-
-      // threshold sederhana
-      const threshold = canvas.width * 0.15; // 15% dari lebar layar
-      const kiri  = mid < canvas.width/2 - threshold;
-      const kanan = mid > canvas.width/2 + threshold;
-
-      const now = performance.now();
-      if (now - lastK < 1500) return; // debounce 1.5s
-      
-      if (sudahJawab) return; // cegah jawaban ganda
-      
-      if (kiri)  { 
-        pilih('kiri');  
-        lastK = now; 
-      } else if (kanan) { 
-        pilih('kanan'); 
-        lastK = now; 
-      }
-    }
-
-    function pilih(arah) {
-      // Tandai sudah menjawab
-      sudahJawab = true;
-      
-      // Tandai kotak yang dipilih
-      kotak.forEach(k => k.classList.toggle('terpilih', k.dataset.pilihan === arah));
-      
-      // Dapatkan soal saat ini
-      const currentSoal = soalData[currentQuestionIndex];
-      
-      // Tentukan jawaban user
-      const jawabanUser = arah === 'kiri' ? currentSoal.pilihan[0] : currentSoal.pilihan[1];
-      
-      // Cek kebenaran
-      if (jawabanUser === currentSoal.jawabanBenar) {
-        score += 10;
-        pesanEl.textContent = "Benar! +10 Poin";
-        pesanEl.style.color = "#2ecc71";
-      } else {
-        pesanEl.textContent = "Salah! Jawaban: " + currentSoal.jawabanBenar;
-        pesanEl.style.color = "#e74c3c";
-      }
-      
-      // Update skor
-      scoreEl.textContent = `Poin: ${score}`;
-      
-      // Update progress bar
-      const progress = ((currentQuestionIndex + 1) / soalData.length) * 100;
-      progressBar.style.width = progress + "%";
-      
-      // Reset untuk soal berikutnya (setelah 3 detik)
-      setTimeout(() => {
-        // Reset tampilan
-        kotak.forEach(k => k.classList.remove('terpilih'));
-        pesanEl.textContent = "";
+    <script>
+        let currentQuestion = 0;
+        let score = 0;
+        let selectedAnswer = null;
+        let answered = false;
+        const totalQuestions = 20;
+        let studentName = '';
+        let studentClass = '';
+        let isOnline = navigator.onLine;
         
-        // Reset status
-        sudahJawab = false;
+        // Google Apps Script URL - Ganti dengan URL deployment kamu
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwX8bX7z6bY7Z6vX7z6bY7Z6vX7z6bY7Z6vX7z6bY7Z6vX/exec';
         
-        // Pindah ke soal berikutnya
-        currentQuestionIndex++;
+        // Check online status
+        window.addEventListener('online', () => {
+            isOnline = true;
+            showNotification('Koneksi internet tersambung!', 'success');
+            checkPendingData();
+        });
         
-        // Cek apakah sudah selesai semua soal
-        if (currentQuestionIndex >= soalData.length) {
-          // Tampilkan hasil akhir
-          document.getElementById('soal').textContent = "Kuis Selesai! Skor Akhir: " + score + "/" + (soalData.length * 10);
-          document.getElementById('jawaban').style.display = "none";
-          document.querySelector('.progress-container').style.display = "none";
-          
-          // Tampilkan pesan berdasarkan skor
-          if (score >= 80) {
-            pesanEl.textContent = "Hebat! Kamu ahli peredaran darah!";
-            pesanEl.style.color = "#2ecc71";
-          } else if (score >= 50) {
-            pesanEl.textContent = "Bagus! Tapi bisa lebih baik lagi!";
-            pesanEl.style.color = "#f39c12";
-          } else {
-            pesanEl.textContent = "Belajar lagi ya tentang peredaran darah!";
-            pesanEl.style.color = "#e74c3c";
-          }
-        } else {
-          // Update soal dan pilihan
-          const nextSoal = soalData[currentQuestionIndex];
-          document.getElementById('soal').textContent = nextSoal.soal;
-          kotak[0].textContent = nextSoal.pilihan[0];
-          kotak[1].textContent = nextSoal.pilihan[1];
+        window.addEventListener('offline', () => {
+            isOnline = false;
+            showNotification('Koneksi internet terputus', 'error');
+        });
+        
+        // Show notification
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = 'notification ' + type;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
         }
-      }, 3000);
-    }
-  </script>
+        
+        // Handle student form submission
+        document.getElementById('studentInfoForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            studentName = document.getElementById('studentName').value.trim();
+            studentClass = document.getElementById('studentClass').value;
+            
+            if (studentName && studentClass) {
+                // Hide form and show quiz
+                document.getElementById('studentForm').classList.add('hidden');
+                document.getElementById('quizQuestions').classList.add('active');
+                
+                updateProgress();
+            }
+        });
+
+        function updateProgress() {
+            document.getElementById('currentQ').textContent = currentQuestion + 1;
+            const progressPercent = ((currentQuestion + 1) / totalQuestions) * 100;
+            document.getElementById('progressFill').style.width = progressPercent + '%';
+        }
+
+        function selectOption(option) {
+            if (answered) return;
+            
+            // Remove previous selections
+            const options = document.querySelectorAll('.question-card.active .option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            
+            // Select current option
+            option.classList.add('selected');
+            selectedAnswer = option.dataset.answer;
+            
+            // Enable next button
+            document.getElementById('nextBtn').disabled = false;
+        }
+
+        function showAnswer() {
+            answered = true;
+            const options = document.querySelectorAll('.question-card.active .option');
+            
+            options.forEach(option => {
+                if (option.dataset.answer === 'correct') {
+                    option.classList.add('correct');
+                } else if (option.classList.contains('selected') && option.dataset.answer === 'wrong') {
+                    option.classList.add('wrong');
+                }
+            });
+            
+            if (selectedAnswer === 'correct') {
+                score++;
+            }
+        }
+
+        function nextQuestion() {
+            if (!answered && selectedAnswer) {
+                showAnswer();
+                setTimeout(() => {
+                    proceedToNext();
+                }, 1500);
+            } else if (answered) {
+                proceedToNext();
+            }
+        }
+
+        function proceedToNext() {
+            if (currentQuestion < totalQuestions - 1) {
+                // Hide current question
+                document.querySelectorAll('.question-card')[currentQuestion].classList.remove('active');
+                
+                // Show next question
+                currentQuestion++;
+                document.querySelectorAll('.question-card')[currentQuestion].classList.add('active');
+                
+                // Reset state
+                selectedAnswer = null;
+                answered = false;
+                document.getElementById('nextBtn').disabled = true;
+                document.getElementById('prevBtn').disabled = false;
+                
+                updateProgress();
+            } else {
+                showResults();
+            }
+        }
+
+        function previousQuestion() {
+            if (currentQuestion > 0) {
+                // Hide current question
+                document.querySelectorAll('.question-card')[currentQuestion].classList.remove('active');
+                
+                // Show previous question
+                currentQuestion--;
+                document.querySelectorAll('.question-card')[currentQuestion].classList.add('active');
+                
+                // Reset state
+                selectedAnswer = null;
+                answered = false;
+                document.getElementById('nextBtn').disabled = true;
+                
+                if (currentQuestion === 0) {
+                    document.getElementById('prevBtn').disabled = true;
+                }
+                
+                updateProgress();
+            }
+        }
+
+        // Function to save data to localStorage
+        function saveToLocalStorage(name, kelas, nilai) {
+            const quizResults = JSON.parse(localStorage.getItem('quizResults') || '[]');
+            quizResults.push({
+                name,
+                kelas,
+                nilai,
+                timestamp: new Date().toISOString(),
+                synced: false
+            });
+            localStorage.setItem('quizResults', JSON.stringify(quizResults));
+        }
+
+        // Function to send data to Google Sheets
+        async function sendToGoogleSheets(name, kelas, nilai) {
+            try {
+                if (!isOnline) {
+                    throw new Error('Tidak ada koneksi internet');
+                }
+                
+                // Create form data
+                const formData = new FormData();
+                formData.append('nama', name);
+                formData.append('kelas', kelas);
+                formData.append('nilai', nilai);
+                
+                const response = await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors'
+                });
+                
+                console.log('Data berhasil dikirim ke Google Sheets');
+                return true;
+            } catch (error) {
+                console.error('Error mengirim data:', error);
+                return false;
+            }
+        }
+
+        // Function to check and sync pending data
+        async function checkPendingData() {
+            const quizResults = JSON.parse(localStorage.getItem('quizResults') || '[]');
+            const pendingData = quizResults.filter(item => !item.synced);
+            
+            if (pendingData.length > 0) {
+                let successCount = 0;
+                
+                for (const item of pendingData) {
+                    const success = await sendToGoogleSheets(item.name, item.kelas, item.nilai);
+                    if (success) {
+                        item.synced = true;
+                        successCount++;
+                    }
+                }
+                
+                // Update localStorage
+                localStorage.setItem('quizResults', JSON.stringify(quizResults));
+                
+                if (successCount > 0) {
+                    showNotification(`${successCount} data berhasil disinkronkan!`, 'success');
+                }
+            }
+        }
+
+        // Function to manually sync data
+        async function syncData() {
+            const syncButton = document.getElementById('syncButton');
+            const syncStatus = document.getElementById('syncStatus');
+            
+            syncButton.disabled = true;
+            syncButton.textContent = 'Menyinkronkan...';
+            syncStatus.textContent = 'Sedang menyimpan data...';
+            
+            const success = await sendToGoogleSheets(studentName, studentClass, score);
+            
+            if (success) {
+                syncStatus.textContent = '✅ Data berhasil disimpan ke server';
+                syncButton.style.display = 'none';
+                
+                // Update localStorage
+                const quizResults = JSON.parse(localStorage.getItem('quizResults') || '[]');
+                const itemIndex = quizResults.findIndex(item => 
+                    item.name === studentName && 
+                    item.kelas === studentClass && 
+                    item.nilai === score && 
+                    !item.synced
+                );
+                
+                if (itemIndex !== -1) {
+                    quizResults[itemIndex].synced = true;
+                    localStorage.setItem('quizResults', JSON.stringify(quizResults));
+                }
+            } else {
+                syncStatus.textContent = '❌ Gagal menyimpan data. Coba lagi nanti.';
+                syncButton.disabled = false;
+                syncButton.textContent = '🔄 Sinkronkan Data';
+            }
+        }
+
+        function showResults() {
+            // Hide all question cards
+            document.querySelectorAll('.question-card').forEach(card => {
+                card.style.display = 'none';
+            });
+            
+            // Hide controls
+            document.querySelector('.controls').style.display = 'none';
+            
+            // Show result card
+            const resultCard = document.querySelector('.result-card');
+            resultCard.classList.add('show');
+            
+            // Update score
+            document.getElementById('finalScore').textContent = score + '/20';
+            
+            // Show student info
+            document.getElementById('studentInfo').innerHTML = `
+                <strong>Nama:</strong> ${studentName}<br>
+                <strong>Kelas:</strong> ${studentClass}
+            `;
+            
+            // Save to localStorage first
+            saveToLocalStorage(studentName, studentClass, score);
+            
+            // Try to send to Google Sheets
+            if (isOnline) {
+                sendToGoogleSheets(studentName, studentClass, score).then(success => {
+                    const syncStatus = document.getElementById('syncStatus');
+                    if (success) {
+                        syncStatus.textContent = '✅ Data berhasil disimpan ke server';
+                    } else {
+                        syncStatus.textContent = '❌ Gagal menyimpan data. Data tersimpan di perangkat Anda.';
+                        document.getElementById('syncButton').style.display = 'inline-block';
+                    }
+                });
+            } else {
+                const syncStatus = document.getElementById('syncStatus');
+                syncStatus.textContent = '⚠️ Tidak ada koneksi internet. Data tersimpan di perangkat Anda.';
+                document.getElementById('syncButton').style.display = 'inline-block';
+            }
+            
+            // Update message based on score
+            let message = '';
+            if (score >= 18) {
+                message = 'Luar biasa! Kamu sangat memahami peredaran darah! 🌟';
+            } else if (score >= 15) {
+                message = 'Bagus sekali! Kamu sudah paham dengan baik! 👏';
+            } else if (score >= 12) {
+                message = 'Cukup baik! Terus belajar ya! 📚';
+            } else if (score >= 8) {
+                message = 'Lumayan! Masih perlu belajar lagi! 💪';
+            } else {
+                message = 'Jangan menyerah! Belajar lagi dan coba lagi! 🔥';
+            }
+            
+            document.getElementById('resultMessage').textContent = message;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            selectedAnswer = null;
+            answered = false;
+            studentName = '';
+            studentClass = '';
+            
+            // Reset form
+            document.getElementById('studentInfoForm').reset();
+            
+            // Show form, hide quiz
+            document.getElementById('studentForm').classList.remove('hidden');
+            document.getElementById('quizQuestions').classList.remove('active');
+            
+            // Reset all question cards
+            document.querySelectorAll('.question-card').forEach((card, index) => {
+                card.style.display = 'none';
+                card.classList.remove('active');
+                
+                // Reset options
+                const options = card.querySelectorAll('.option');
+                options.forEach(option => {
+                    option.classList.remove('selected', 'correct', 'wrong');
+                });
+            });
+            
+            // Show first question
+            document.querySelectorAll('.question-card')[0].classList.add('active');
+            
+            // Reset controls
+            document.querySelector('.controls').style.display = 'flex';
+            document.getElementById('prevBtn').disabled = true;
+            document.getElementById('nextBtn').disabled = true;
+            
+            // Hide result card
+            document.querySelector('.result-card').classList.remove('show');
+            
+            // Reset sync status
+            document.getElementById('syncStatus').textContent = '';
+            document.getElementById('syncButton').style.display = 'none';
+        }
+
+        // Add click event listeners to all options
+        document.addEventListener('DOMContentLoaded', function() {
+            const allOptions = document.querySelectorAll('.option');
+            allOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    selectOption(this);
+                });
+            });
+            
+            updateProgress();
+            
+            // Check for pending data on load
+            if (isOnline) {
+                checkPendingData();
+            }
+        });
+    </script>
 </body>
 </html>
